@@ -3,10 +3,12 @@
 # MIT Licensed, see LICENSE
 
 import socket
+import time
 
 # Base class for an RCON "connection", even though RCON is technically connectionless (UDP)
 # Initialization takes an address, port, and password
 class RConnection():
+	_long_commands = ["map"]
 	def __init__(self, host, port, password):
 		self.host = host
 		try:
@@ -24,7 +26,6 @@ class RConnection():
 
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.socket.connect((self.host, self.port))
-		self.socket.settimeout(2.0)
 
 	def close(self):
 		try:
@@ -49,6 +50,7 @@ class RConnection():
 		self.connect()
 
 	def test(self):
+		self.socket.settimeout(4)
 		try:
 			self.socket.send(b"test")
 			self.socket.recv(65535)
@@ -56,10 +58,37 @@ class RConnection():
 		except:
 			return False
 
+	def recvall(self, timeout = 0.5):
+		self.socket.setblocking(False)
+		ret = ""
+		data = ""
+
+		start = time.time()
+		while True:
+			if ret and time.time() - start > timeout:
+				break
+			elif time.time() - start > timeout * 2:
+				break
+
+			try:
+				data = self.socket.recv(4096)
+				if data:
+					ret += data[4:].decode()
+					start = time.time()
+				else:
+					time.sleep(0.1)
+			except:
+				pass
+
+		return ret
+
 	def send(self, data):
-		try:
-			self.socket.send(b"\xFF\xFF\xFF\xFF" + "rcon {} {}".format(self.password, data).encode())
-			r = self.socket.recv(4096)
-			return r[4:].decode()
-		except:
-			return False
+		self.socket.send(b"\xFF\xFF\xFF\xFF" + "rcon {} {}".format(self.password, data).encode())
+
+		if data.split(" ")[0] in self._long_commands:
+			r = self.recvall(timeout = 5)
+		else:
+			r = self.recvall()
+
+		return r
+
