@@ -1,4 +1,4 @@
-# py-rcon
+# pyrcon
 ### A stupidly simple RCON library
 
 ## About
