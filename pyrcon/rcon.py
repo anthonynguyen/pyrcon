@@ -25,7 +25,7 @@ class RConnection():
 
 	def __exit__(self, type, value, traceback):
 		self.close()
-		return traceback
+		return traceback if traceback else True
 
 	def connect(self):
 		"""Connect function that sets up the socket
