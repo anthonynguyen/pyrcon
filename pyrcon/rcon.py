@@ -19,6 +19,14 @@ class RConnection():
 
 		self.connect()
 
+	def __enter__(self):
+		if self.test():
+			return self
+
+	def __exit__(self, type, value, traceback):
+		self.close()
+		return traceback if traceback else True
+
 	def connect(self):
 		"""Connect function that sets up the socket
 		Meant for internal use"""
