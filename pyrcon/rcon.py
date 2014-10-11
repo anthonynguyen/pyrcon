@@ -7,7 +7,7 @@ import time
 
 # Base class for an RCON "connection", even though RCON is technically connectionless (UDP)
 # Initialization takes an address, port, and password
-class RConnection():
+class RConnection(object):
 	_long_commands = ["map"]
 	def __init__(self, host, port, password):
 		self.host = host
