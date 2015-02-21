@@ -13,6 +13,7 @@ class q2RConnection(RConnection):
     def __init__(self, host=None, port=27910, password=None):
         RConnection.__init__(self, host, port, password)
         self._maplist = self.maplist()
+        self.servervariables()
 
     def status(self):
         status = False
@@ -83,3 +84,9 @@ class q2RConnection(RConnection):
             self.current_map = mapname
         else:
             return "no"
+
+    def servervariables(self):
+        self.hostname = self.send("hostname").split('" is "')[1][:-2]
+        self.version = self.send("version").split('" is "')[1][:-2]
+        self.sv_gravity = self.send("sv_gravity").split('" is "')[1][:-2]
+
