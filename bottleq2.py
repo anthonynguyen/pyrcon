@@ -21,6 +21,7 @@ import json
 import bottle
 
 app = bottle.Bottle()
+app.config['autojson'] = True
 
 @app.hook('after_request')
 def enable_cors():
@@ -39,22 +40,47 @@ def index():
     /v1/maps/<mapname> [get to test if valid / post to change with rcon_password in header]
     </pre>
     '''
+    
+@app.get('/v1/status')
+def status():
+    conn.status()
+    bottle.response.content_type = 'application/json'
+    output = {'currentMap': conn.current_map, 'connectedPlayers': len(conn.Players)}
+    return json.dumps(output)
 
 @app.get('/v1/players')
 def players():
     conn.status()
+    if bottle.request.headers.get('rcon_password') == q2password:
+        # print conn.Players
+        Players = conn.Players
+    else:
+        playerCnt = 0
+        Players = []
+        for player in conn.Players:
+            Players.append(
+                           {
+                            str(playerCnt):
+                                {
+                                    'name':player[str(playerCnt)]['name']
+                                }
+                            }
+                           )
+            playerCnt += 1
     bottle.response.content_type = 'application/json'
-
-    players = {"players": conn.Players}
+    players = {"players": Players}
     return json.dumps(players, separators=(',', ': '))
 
 @app.get('/v1/players/<num:int>')
 def player(num):
-    bottle.response.content_type = 'application/json'
-    conn.status()
-    if num <= len(conn.Players) - 1:
-        return json.dumps({"players": conn.Players[num]})
-    return json.dumps({"players": None})
+    if bottle.request.headers.get('rcon_password') == q2password:
+        bottle.response.content_type = 'application/json'
+        conn.status()
+        if num <= len(conn.Players) - 1:
+            return json.dumps({"players": conn.Players[num]})
+        return json.dumps({"players": None})
+    return bottle.abort(401, "Sorry, access denied. Missing required rcon_password header with valid password.")
+
 
 @app.delete('/v1/players/<num:int>')
 def kickPlayer(num):
