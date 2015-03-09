@@ -137,13 +137,13 @@ def changemap(mapname):
     return bottle.abort(401, "Sorry, access denied. Missing required rcon-password header with valid password.")
 
 
-@app.post('/v1/rawcommand')
+@app.route('/v1/rawcommand',method=['OPTIONS', 'POST'])
 def rawCommand():
     bottle.response.content_type = 'application/json'
     if bottle.request.headers.get('rcon-password') == q2password:
         command = str(bottle.request.forms.get('command')).strip()
         print command
-        return '{"command": "' + command + '", "status": "' + conn.send(command) + '"}'
+        return json.dumps({"command": command, "status": conn.send(command)})
     return bottle.abort(401, "Sorry, access denied. Missing required rcon-password header with valid password.")
 
 app.install(EnableCors())
