@@ -6,24 +6,24 @@ from pyrcon import RConnection
 
 
 class q2RConnection(RConnection):
-    current_map = ""
+    current_map = ''
     Players = []
 
 
     def __init__(self, host=None, port=27910, password=None):
-        RConnection.__init__(self, host, port, password)
+         super(Q2RConnection, self).__init__(host, port, password)
         self._maplist = self.maplist()
         self.servervariables()
 
     def status(self):
         status = False
         playerinfo = False
-        output = self.send("status")
+        output = self.send('status')
         self.Players = []
         
         lines =  output.splitlines()
         for line in lines:
-            if playerinfo and line[0:3].strip(" ")<>"":
+            if playerinfo and line[0:3].strip(' ') != '':
                 self.Players.append(
                         {
                             line[0:3].strip():
@@ -39,34 +39,26 @@ class q2RConnection(RConnection):
                         }
                 )
 
-            if status and self.current_map == "":
-                self.current_map = line.split(": ")[1]
-                #print q2map
+            if status and self.current_map == '':
+                self.current_map = line.split(': ')[1]
 
-            if line == '''--- ----- ---- --------------- ------- --------------------- -------- ---''':
-                #print "playerinfo start"
+            if line == """--- ----- ---- --------------- ------- --------------------- -------- ---""":
                 playerinfo = True
-                #print line[0:2]
 
-            #print ">",line
-            if line.find("print") >= 0:
-                #print "beginning of status"
+            if line.find('print') >= 0:
                 status = True
-            
-        #print "end of status"
-        #print Players
+
 
     def maplist(self):
-        output = self.send("dir maps/")
-
+        output = self.send('dir maps/')
         lines =  output.splitlines()
         maplist = []
 
         for line in lines:
             sline = line.strip()
-            if sline == "":
-                break #seems to duplicate from q2 
-            if sline <> "----" or sline <> 'Directory of ' or sline <> 'print':
+            if not sline:
+                break # seems to duplicate from q2 
+            if sline != '----' or sline != 'Directory of ' or sline != 'print':
                 maplist.append(line.split(".")[0])
 
         maplist.sort()
@@ -74,19 +66,17 @@ class q2RConnection(RConnection):
 
     def changemap(self, mapname):
         if mapname in self._maplist:
-            #print "yes"
-            output = self.send("map " + mapname)
-            #print output
+            output = self.send('map ' + mapname)
             for line in output:
-                if line.find("server map: ") >= 0:
-                    if line.split(":")[1] <> mapname:
+                if line.find('server map: ') >= 0:
+                    if line.split(':')[1] != mapname:
                         print "didn't change correctly to " + mapname
             self.current_map = mapname
         else:
-            return "no"
+            return 'no'
 
     def servervariables(self):
-        self.hostname = self.send("hostname").split('" is "')[1][:-2]
-        self.version = self.send("version").split('" is "')[1][:-2]
-        self.sv_gravity = self.send("sv_gravity").split('" is "')[1][:-2]
+        self.hostname = self.send('hostname').split('" is "')[1][:-2]
+        self.version = self.send('version').split('" is "')[1][:-2]
+        self.sv_gravity = self.send('sv_gravity').split('" is "')[1][:-2]
 
