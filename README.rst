@@ -35,6 +35,9 @@ Quake2
     conn.status()
 
 To use the webapi for q2:
+
+    Local
+    
     1. Install bottle
     2. Create/update a file called q2webapi.conf
 
@@ -49,6 +52,13 @@ To use the webapi for q2:
         port = 27910
         password = rconpassword
 
+    3. Run python bottleq2-local.py
+    
+    
+    Remote
+    
+    1. Install bottle
+    2. Run python bottleq2-remote.py
 
 License
 -------
