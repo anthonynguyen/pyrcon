@@ -4,7 +4,7 @@ by Anthony Nguyen
 MIT Licensed, see LICENSE
 """
 
-import thread
+import threading as thread
 import socket
 import time
 
@@ -23,10 +23,11 @@ class RConnection(object):
     _port = 27960  # virtual port where to forward rcon commands
     _password = ''  # rcon password of the server
     _timeout = 0.5  # default socket timeout
-    _rconsendstring = '\xFF\xFF\xFF\xFFrcon {0} {1}'  # rcon command pattern
+    _rconsendheader = b'\xFF\xFF\xFF\xFF'
+    _rconsendstring = 'rcon {0} {1}' # rcon command pattern
     _rconreplystring = '\xFF\xFF\xFF\xFFprint\n'  # rcon response header
     _badrcon_replies = ['Bad rconpassword.', 'Invalid password.']
-    _long_commands_timeout = {'map': 5.0, 'fdir': 5.0}  # custom timeouts
+    _long_commands_timeout = {'map': 5.0, 'fdir': 5.0,'dir maps/': 5.0}  # custom timeouts
 
     def __init__(self, host, port, password):
         """
@@ -38,7 +39,8 @@ class RConnection(object):
         self.host = host
         self.port = port
         self.password = password
-        self.lock = thread.allocate_lock()
+        #self.lock = thread.allocate_lock()
+        self.lock = thread.Lock()
         self.socket = socket.socket(type=socket.SOCK_DGRAM)
         self.socket.connect((self.host, self.port))
         self.test()
@@ -110,16 +112,17 @@ class RConnection(object):
                 break
 
             try:
-                data = self.socket.recv(4096)
+                data = self.socket.recv(4096)[4:]
+                print(data)
                 if data:
-                    response += data.replace(self._rconreplystring, '')
+                    response+=data.decode('utf-8')
                     start = time.time()
                 else:
                     time.sleep(0.1)
             except socket.error:
                 pass
 
-        return response.strip()
+        return response #.strip()
 
     def send(self, data):
         """
@@ -132,8 +135,8 @@ class RConnection(object):
             if not data:
                 raise RconError('no command supplied')
             with self.lock:
-                self.socket.send(self._rconsendstring.format(self.password, data))
-        except socket.error, e:
+                self.socket.send(self._rconsendheader + bytes(self._rconsendstring.format(self.password, data),'utf-8'))
+        except socket.error as e:
             raise RconError(e.message, e)
         else:
             timeout = self._timeout
