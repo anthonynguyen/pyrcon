@@ -19,8 +19,9 @@ class q2RConnection(RConnection):
         status = False
         playerinfo = False
         output = self.send('status')
+        self.current_map = ''
         #print(output)
-        #import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()    
         self.Players = []
         
         lines =  output.splitlines()
