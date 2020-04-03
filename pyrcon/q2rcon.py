@@ -80,7 +80,8 @@ class q2RConnection(RConnection):
             return 'no'
 
     def servervariables(self):
-        self.hostname = self.send('hostname').split('" is "')[1][:-2]
-        self.version = self.send('version').split('" is "')[1][:-2]
-        self.sv_gravity = self.send('sv_gravity').split('" is "')[1][:-2]
+        #self.hostname = self.send('hostname').split('" is "')[1][:-2]
+        #self.version = self.send('version').split('" is "')[1][:-2]
+        #self.sv_gravity = self.send('sv_gravity').split('" is "')[1][:-2]
+        pass
 
