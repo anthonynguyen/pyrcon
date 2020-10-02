@@ -11,7 +11,7 @@ class Q2RConnection(RConnection):
 
 
     def __init__(self, host=None, port=27910, password=None):
-        super(q2RConnection, self).__init__(host, port, password)
+        super(Q2RConnection, self).__init__(host, port, password)
         self._maplist = self.maplist()
         self.servervariables()
 
