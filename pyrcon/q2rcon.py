@@ -5,13 +5,13 @@
 from pyrcon import RConnection
 
 
-class q2RConnection(RConnection):
+class Q2RConnection(RConnection):
     current_map = ''
     Players = []
 
 
     def __init__(self, host=None, port=27910, password=None):
-         super(Q2RConnection, self).__init__(host, port, password)
+        super(Q2RConnection, self).__init__(host, port, password)
         self._maplist = self.maplist()
         self.servervariables()
 
@@ -19,10 +19,14 @@ class q2RConnection(RConnection):
         status = False
         playerinfo = False
         output = self.send('status')
+        self.current_map = ''
+        #print(output)
+        #import pdb; pdb.set_trace()    
         self.Players = []
         
         lines =  output.splitlines()
         for line in lines:
+            #print("line",line)
             if playerinfo and line[0:3].strip(' ') != '':
                 self.Players.append(
                         {
@@ -70,7 +74,7 @@ class q2RConnection(RConnection):
             for line in output:
                 if line.find('server map: ') >= 0:
                     if line.split(':')[1] != mapname:
-                        print "didn't change correctly to " + mapname
+                        print("didn't change correctly to " + mapname)
             self.current_map = mapname
         else:
             return 'no'
@@ -79,4 +83,5 @@ class q2RConnection(RConnection):
         self.hostname = self.send('hostname').split('" is "')[1][:-2]
         self.version = self.send('version').split('" is "')[1][:-2]
         self.sv_gravity = self.send('sv_gravity').split('" is "')[1][:-2]
+        pass
 

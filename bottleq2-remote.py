@@ -55,7 +55,7 @@ def players():
     conn.status()
     Players = conn.Players
     bottle.response.content_type = 'application/json'
-    print Players
+    print(Players)
     players = {"players": Players}
     return json.dumps(players, separators=(',', ': '))
 
@@ -118,10 +118,10 @@ def rawCommand():
     conn = pyrcon.q2RConnection(host=bottle.request.query.q2host, port=bottle.request.query.q2port, password=bottle.request.headers.get('rcon-password'))
     bottle.response.content_type = 'application/json'
     command = str(bottle.request.forms.get('command')).strip()
-    print command
+    print(command)
     return json.dumps({"command": command, "status": conn.send(command)})
 
 app.install(EnableCors())
 app.config['autojson'] = True
 
-app.run(host="127.0.0.1", port=8080, reloader=True, debug=True)
+app.run(host="0.0.0.0", port=8089, reloader=True, debug=True)
