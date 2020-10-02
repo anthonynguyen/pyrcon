@@ -1,3 +1,3 @@
 from .rcon import RconError
 from .rcon import RConnection
-from .q2rcon import q2RConnection
+from .q2rcon import Q2RConnection
