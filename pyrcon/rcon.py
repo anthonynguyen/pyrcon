@@ -1,10 +1,11 @@
 """
 Multipurpose RCON library in Python
 by Anthony Nguyen
+updated to Python3 by Dustin S (texnofobix)
 MIT Licensed, see LICENSE
 """
 
-import thread
+import threading as thread
 import socket
 import time
 
@@ -23,12 +24,18 @@ class RConnection(object):
     _port = 27960  # virtual port where to forward rcon commands
     _password = ''  # rcon password of the server
     _timeout = 0.5  # default socket timeout
-    _rconsendstring = '\xFF\xFF\xFF\xFFrcon {0} {1}'  # rcon command pattern
+    _rconsendheader = b'\xFF\xFF\xFF\xFF'
+    _rconsendstring = 'rcon {0} {1}'  # rcon command pattern
     _rconreplystring = '\xFF\xFF\xFF\xFFprint\n'  # rcon response header
-    _badrcon_replies = ['Bad rconpassword.', 'Invalid password.']
-    _long_commands_timeout = {'map': 5.0, 'fdir': 5.0}  # custom timeouts
+    _badrcon_replies = [
+        'Bad rconpassword.',
+        'Invalid password.',
+        'print\nBad rcon_password.\n'
+    ]
+    # custom timeouts
+    _long_commands_timeout = {'map': 5.0, 'fdir': 5.0, 'dir maps/': 5.0}
 
-    def __init__(self, host, port, password):
+    def __init__(self, host, port, password=None):
         """
         :param host: The ip/domain where to send RCON commands
         :param port: The port where to send RCON commands
@@ -38,16 +45,19 @@ class RConnection(object):
         self.host = host
         self.port = port
         self.password = password
-        self.lock = thread.allocate_lock()
+        self.lock = thread.Lock()
         self.socket = socket.socket(type=socket.SOCK_DGRAM)
         self.socket.connect((self.host, self.port))
-        self.test()
+        self.test_password()
 
     def _get_host(self):
         return self._host
 
     def _set_host(self, value):
-        self._host = value.strip()
+        try:
+            self._host = value.strip()
+        except AttributeError:
+            raise RconError('expecting hostname')
 
     """:type : str"""
     host = property(_get_host, _set_host)
@@ -56,7 +66,8 @@ class RConnection(object):
         return self._password
 
     def _set_password(self, value):
-        self._password = value.strip()
+        if value is not None:
+            self._password = value.strip()
 
     """:type : str"""
     password = property(_get_password, _set_password)
@@ -68,7 +79,7 @@ class RConnection(object):
         try:
             self._port = int(value)
         except ValueError:
-            pass
+            raise RconError('bad rcon port supplied')
 
     """:type : int"""
     port = property(_get_port, _set_port)
@@ -85,16 +96,18 @@ class RConnection(object):
         finally:
             return traceback or True
 
-    def test(self):
+    def test_password(self):
         """
         Test the RCON connection
         :raise RconError: When an invalid RCON password is supplied
         """
         response = self.send('status')
         if response in self._badrcon_replies:
+            self._password = None
             raise RconError('bad rcon password supplied')
+        return True
 
-    def recvall(self, timeout=0.5):
+    def _recvall(self, timeout=0.5):
         """
         Receive the RCON command response
         :param timeout: The timeout between consequent data receive
@@ -110,20 +123,20 @@ class RConnection(object):
                 break
 
             try:
-                data = self.socket.recv(4096)
+                data = self.socket.recv(4096)[4:]
                 if data:
-                    response += data.replace(self._rconreplystring, '')
+                    response += data.decode('utf-8')
                     start = time.time()
                 else:
                     time.sleep(0.1)
             except socket.error:
                 pass
 
-        return response.strip()
+        return response
 
     def send(self, data):
         """
-        Send a RCON command over the socket
+        Send a command over the socket. If password is set use rcon
         :param data: The command to send
         :raise RconError: When it's not possible to evaluate the command
         :return str: The server response to the RCON command
@@ -132,12 +145,14 @@ class RConnection(object):
             if not data:
                 raise RconError('no command supplied')
             with self.lock:
-                self.socket.send(self._rconsendstring.format(self.password, data))
-        except socket.error, e:
+                if self.password != '':
+                    data = self._rconsendstring.format(self.password, data)
+            self.socket.send(self._rconsendheader + bytes(data, 'utf-8'))
+        except socket.error as e:
             raise RconError(e.message, e)
         else:
             timeout = self._timeout
             command = data.split(' ')[0]
             if command in self._long_commands_timeout:
                 timeout = self._long_commands_timeout[command]
-            return self.recvall(timeout=timeout)
+            return self._recvall(timeout=timeout)
