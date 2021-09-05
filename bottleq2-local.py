@@ -3,8 +3,8 @@ Copyright 2015 - texnofobix
 """
 
 
-import ConfigParser
-config = ConfigParser.RawConfigParser()
+import configparser
+config = configparser.ConfigParser()
 configFilePath = r'q2webapi.conf'
 config.read(configFilePath)
 
@@ -74,8 +74,8 @@ def players():
         Players = []
 
         for player in conn.Players:
-            print player.keys()
-            Players.append({str(player.keys()):
+            print((list(player.keys())))
+            Players.append({str(list(player.keys())):
                             {'name': player[str(playerCnt)]['name']}})
 
     bottle.response.content_type = 'application/json'
@@ -142,7 +142,7 @@ def rawCommand():
     bottle.response.content_type = 'application/json'
     if bottle.request.headers.get('rcon-password') == q2password:
         command = str(bottle.request.forms.get('command')).strip()
-        print command
+        print(command)
         return json.dumps({"command": command, "status": conn.send(command)})
     return bottle.abort(401, "Sorry, access denied. Missing required rcon-password header with valid password.")
 

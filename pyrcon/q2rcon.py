@@ -49,6 +49,7 @@ class Q2RConnection(RConnection):
 
         lines = output.splitlines()
         for line in lines:
+            #print("line",line)
             if playerinfo and line[0:3].strip(' ') != '':
                 self.players.append(
                         {
