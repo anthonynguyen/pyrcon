@@ -2,16 +2,16 @@ import unittest
 import pyrcon
 
 
-host = 'localhost'
-port = 27911
-password = 'mypass'
+TESTHOST = 'localhost'
+TESTPORT = 27911
+TESTPASS = 'mypass'
 
 # py.test tests --cov-report xml:cov.xml --cov pyrcon
 
 
 class Q2RconTestCase(unittest.TestCase):
     def setUp(self):
-        self.conn = pyrcon.Q2RConnection(host, port, password)
+        self.conn = pyrcon.Q2RConnection(TESTHOST, TESTPORT, TESTPASS)
         pass
 
     def test_get_status(self):
@@ -23,7 +23,7 @@ class Q2RconTestCase(unittest.TestCase):
         self.assertTrue(len(self.conn.maplist) > 0, 'no maps found')
 
     def test_change_invalid_map(self):
-        with self.assertRaises(BaseException, msg='bad password not caught'):
+        with self.assertRaises(BaseException, msg='invalid map not caught'):
             self.conn.change_map('invalid')
 
     def test_get_serverinfo(self):
@@ -41,11 +41,11 @@ class Q2RconTestCase(unittest.TestCase):
 
     def test__parse_serverinfo(self):
         self.assertIs(
-            type(self.conn._parse_serverinfo(test_server_info)), dict
+            type(self.conn._parse_serverinfo(TEST_SERVER_INFO)), dict
         )
 
 
-test_server_info = """Server info settings:
+TEST_SERVER_INFO = """Server info settings:
 Q2Admin             1.17.52
 mapname             dday1
 bots                1

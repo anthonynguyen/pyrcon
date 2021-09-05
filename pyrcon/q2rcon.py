@@ -1,40 +1,45 @@
-# Quake2 specific RCON library using pyrcon
-# by texnofobix
-# MIT license
-from pyrcon import RConnection
+""" Quake2 specific RCON library using pyrcon
+by texnofobix
+MIT license
+"""
+from pyrcon import RConnection, RconError
 
 REPORT_LINE = '--- ----- ---- --------------- ------- '
 REPORT_LINE += '--------------------- -------- ---'
 
 
+class Q2Exception(RconError):
+    """ Class exceptions """
+
+
 class Q2RConnection(RConnection):
+    """ Class to allow connections to Quake 2 Servers """
 
     def __init__(self, host=None, port=27910, password=None):
-        super(Q2RConnection, self).__init__(host, port, password)
+        super().__init__(host, port, password)
         self.maplist = []
         self.current_map = ""
         self.players = []
         self.serverinfo = {}
 
-    def send(self, command):
+    def send(self, data):
         """
         Send a RCON command over the socket
-        :param command: The command to send
-        :raise RconError: When it's not possible to evaluate the command
+        :param data: The command to send
+        :raise Q2Exception: When it's not possible to evaluate the command
         :return str: The server response to the RCON command
         """
-        response = super(Q2RConnection, self).send(command)
+        response = super().send(data)
 
         if response[0:5] != 'print':
-            # TODO: Return Error
-            print('no response from server!')
-        else:
-            return(response[6:])
+            return Q2Exception('no response from server!')
+
+        return response[6:]
 
     def get_status(self):
         """
         Send a RCON command over the socket
-        :raise RconError: When it's not possible to evaluate the command
+        :raise Q2Exception: When it's not possible to evaluate the command
         :return str: The server response to the RCON command
         """
         playerinfo = False
@@ -88,12 +93,12 @@ class Q2RConnection(RConnection):
     def change_map(self, map_name):
         """
         Request map change by name
-        :raise RconError: When it's not possible to evaluate the command
+        :raise Q2Exception: When it's not possible to evaluate the command
         """
         self.send('map ' + map_name)
         self.get_status()
         if self.current_map != map_name:
-            raise self.RconError('map failed to change')
+            raise Q2Exception('map failed to change')
 
     def get_serverinfo(self):
         """
