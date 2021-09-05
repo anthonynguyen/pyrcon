@@ -9,6 +9,7 @@ setup(
     packages=["pyrcon"],
     url="https://github.com/clearskies/pyrcon",
     license="MIT",
-    description="A stupidly simple RCON library",
+    description="A stupidly simple RCON library (for UDP servers)",
     long_description=open("README.rst").read(),
+    python_requires=">=3.7",
 )
